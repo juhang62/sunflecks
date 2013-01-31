@@ -3,16 +3,16 @@
  * and open the template in the editor.
  */
 package sunflecks;
-import static java.lang.Math.*;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.FileNotFoundException;
-
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.List;
+import static java.lang.Math.*;
+import javax.swing.*;
+import org.math.plot.*;
 
 /**
  *
@@ -89,34 +89,36 @@ public final class Sunflecks {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        Sunflecks simSunflecks=new Sunflecks(100);      
-        double dt=0.01;
-//        double[] timearr={
-//            1, 3, 4, 5, 500};
-//        double[] irrarr={
-//        400, 500, 500,500,500};  
-        
-        double[] timearr;
-        timearr=new double[563];
-        double[] irrarr;
-        irrarr=new double[563];
+        //instantiate the class, initialize it with equilibrium at PAR=100
+        Sunflecks simSunflecks=new Sunflecks(100);       
+        double dt=0.01;        //time step
+
         CSVReader reader = new CSVReader(new FileReader("sim4488.csv"));
         CSVWriter writer = new CSVWriter(new FileWriter("output88.csv"), '\t');
-        String [] nextLine;
-        int iline=0;
-        while ((nextLine = reader.readNext()) != null) {
-            // nextLine[] is an array of values from the line
-            timearr[iline]= Double.parseDouble(nextLine[0]);
-            irrarr[iline]= Double.parseDouble(nextLine[2]);
-            iline+=1;
+                
+        //read time and PAR from data file and put into two arrays
+        List<String[]> allElements = reader.readAll();
+        int nDatapts=allElements.size();
+        double[] timearr=new double[nDatapts];
+        double[] irrarr=new double[nDatapts];
+        double[] assarr=new double[nDatapts];
+        String[][] tmparr = allElements.toArray(new String[0][]);    
+        for (int i=0;i<nDatapts;i++){
+            timearr[i]=Double.parseDouble(tmparr[i][0]);
+            irrarr[i]=Double.parseDouble(tmparr[i][1]);        
         }
+               
+        
         
         double curtime=0;
-        for (int i=0;i<timearr.length;i++){
+        for (int i=0;i<nDatapts;i++){
             while (curtime<timearr[i]){
-                curtime+=dt;
+                //do the whole simulation every time step
+                curtime+=dt; 
                 simSunflecks.calcDyn(irrarr[i]);             
             }
+            //get An at each data point and write into output file
+            assarr[i]=simSunflecks.ass;
             String str2 =  String.valueOf(simSunflecks.ass);
             String str1 =  String.valueOf(timearr[i]);
             String[] strarr= {str1,str2};
@@ -126,9 +128,26 @@ public final class Sunflecks {
         double teststr=simSunflecks.ass;
         System.out.println(curtime);
         System.out.println(teststr);
+        
+        
+        // create your PlotPanel (you can use it as a JPanel)
+        Plot2DPanel plot = new Plot2DPanel();
+        // define the legend position
+        plot.addLegend("SOUTH");
+        // add a line plot to the PlotPanel
+        //plot.addLinePlot("my plot", timearr, irrarr);
+        plot.addLinePlot("another plot", timearr, assarr);
+        // put the PlotPanel in a JFrame like a JPanel
+        JFrame frame = new JFrame("a plot panel");
+        frame.setSize(600, 600);
+        frame.setContentPane(plot);
+        frame.setVisible(true);
     }
     
+    //constructor be called when instantiate the class
     public Sunflecks(double iniIRR){
+        //Assume the leaf is in equilibrium at the initial PAR 
+        //initialize it by calling steady state model
         this.calcSteady(iniIRR);
     }
     
@@ -149,6 +168,7 @@ public final class Sunflecks {
             this.ci= newci;
             double fx1=fci(this.ci);
             double fx2=fci(this.ci-0.01);
+            //Netwon's Method: xnew=xold-f(xold)/f'(xold)
             newci=this.ci-fx1*(0.01/(fx1-fx2));        
         }
         double gg = getgg(); 
@@ -161,12 +181,13 @@ public final class Sunflecks {
         updateDyngs(dt);
         double gg=getgg();
         this.ci = this.ca - ((this.ass * this.patm) / gg);
-        double newci=this.ci+1;
+        double newci=this.ci+1; //first guess
         for(int ci_i=1; ci_i<500; ci_i++){
             double oldci=this.ci;
             this.ci=newci;
             double fx1=dynfci(this.ci);
             double fx2=dynfci(oldci);
+            //secent method
             newci=this.ci-fx1*((this.ci-oldci)/(fx1-fx2));
             if (abs(newci - this.ci) < 0.0001) {
                 break;
@@ -179,10 +200,13 @@ public final class Sunflecks {
         double vfeq=getvxeq(this.alphaf,this.thetaf,this.vfmax,this.vfmin);
         double vceq=getvxeq(this.alphac,this.thetac,this.vcmax,this.vcmin);
         double wc=getwc(this.ci);
-        double[] tau={this.tauci,this.taucd,this.taufi,this.taufd};
+        double[] tau={this.tauci,this.taucd,this.taufi,this.taufd}; //time const
+        //create a object of Differential Equation
         Dfun photoDif=new Dfun(tau,this.rmax, this.tmax, this.kr,
                 this.kt, this.gamma, this.psi,this.vj,vfeq,vceq, this.ci, wc);
+        //initial value of state variables
         double[] y0={this.vc, this.vf, this.poolT, this.poolR, this.poolG};
+        //calculate those values after one time step
         double[] yf=rk4(y0,dt,photoDif);
         this.vc=yf[0];
         this.vf=yf[1];
@@ -194,6 +218,7 @@ public final class Sunflecks {
         System.out.println(this.ass);
     }
     
+    //dynamic function of ci which we want it to be zero
     public double dynfci(double localci){
         double wc=getwc(localci);
         double ass1 = getass1(wc);
@@ -202,19 +227,22 @@ public final class Sunflecks {
         return ass1-ass2;
     }
     
+    //steady state function of ci which we want it to be zero
     public double fci(double localci){
         double wc = getwc(localci);
         this.poolT=this.tmax;
         this.poolR = getR(); 
-        double eqn2 = geteqn2(localci,wc);       
+        double eqn2 = geteqn2(localci,wc);    //eqn2 in Pearcy1997 
+        //bisection method 
+        //first find T1 and T2 which statify eqn2(T1)<0 , eqn2(T2)>0 
         double T2 = 0;
         double T1 = 0;
         if (eqn2>0){
             T2=this.poolT;
             //find t1
             for(int findt1_i=1; findt1_i<500; findt1_i++){
-                double Tportion=T2/pow(2,findt1_i);             
-                for(int findt1_j=1; findt1_j<pow(2,findt1_i+1); findt1_j++){
+                double Tportion=T2/findt1_i+1;             
+                for(int findt1_j=1; findt1_j<findt1_i+1; findt1_j++){
                     T1=T2-Tportion*findt1_j;
                     this.poolT=T1;
                     this.poolR=getR();
@@ -230,9 +258,9 @@ public final class Sunflecks {
             T1=this.poolT;
             //find t2
             for(int findt2_i=1; findt2_i<500; findt2_i++){
-                double Tportion=T1/pow(2,findt2_i);             
-                for(int findt1_j=1; findt1_j<pow(2,findt2_i); findt1_j++){
-                    T2=T1-Tportion*findt1_j;
+                double Tportion=T1/findt2_i+1;             
+                for(int findt2_j=1; findt2_j<findt2_i+1; findt2_j++){
+                    T2=T1-Tportion*findt2_j;
                     this.poolT=T2;
                     this.poolR=getR();
                     eqn2 = geteqn2(localci,wc); 
@@ -245,6 +273,7 @@ public final class Sunflecks {
             }    
         }
         
+        //bisection
         for (int bisec_i=1; bisec_i<1000; bisec_i++){
             if (abs(eqn2)<0.001){break;}
             this.poolT = (T1 + T2) / 2;
@@ -267,6 +296,7 @@ public final class Sunflecks {
         return ass1-ass2;
     }
     
+    //method to update state varibles of steady state stomata
     public void updateStdygs(){
         this.seq=getSeq();
         this.gs=this.seq*this.gsmax;
@@ -275,6 +305,7 @@ public final class Sunflecks {
         this.water=this.seq;
     }
     
+    //method to update state varibles of dynamic stomata
     public void updateDyngs(double dt){
         this.seq=getSeq();
         Dfun gsDif=new Dfun(this.taugi,this.taugd,this.taupi,this.tauw,this.seq);
@@ -286,6 +317,7 @@ public final class Sunflecks {
         this.gs=this.gsmax*this.water;
     }
     
+    //runge-kutta
     public double[] rk4(double[] y0,double dt,Dfun dfun){
         double[] k1=dfun.getdf(y0);
         k1=scaleArray(k1,dt);
@@ -320,6 +352,7 @@ public final class Sunflecks {
         return arr1;
     }
     
+    //get equilibrium signal 
     public double getSeq(){
         double smin = this.gsmin / this.gsmax;
         double seqval = ((1 + smin + this.alphag * this.irr)
@@ -328,6 +361,7 @@ public final class Sunflecks {
         return seqval;
     }
     
+    //get equilibrium vf, vj, vc
     private double getvxeq(double alphax, double thetax, double vmax, double vxmin){
         double fn = (((alphax * this.irr + 1 - vxmin)
                 - sqrt(pow(alphax * this.irr + 1 - vxmin,2)  
