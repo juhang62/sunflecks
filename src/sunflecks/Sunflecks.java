@@ -20,9 +20,7 @@ import org.math.plot.*;
  */
 public final class Sunflecks {
 
-    public double signal;
-    public double pi;
-    public double water;
+    //stomata para
     public double gsmax = 0.05;
     public double gsmin = 0.007;
     public double gb = 1440000;
@@ -55,18 +53,23 @@ public final class Sunflecks {
     public double ca = 39;//changed
     public double po2 = 21000;
     /**/
-    public double psi = 0.321430269302047;
     public double taugi = 215.5893;
     public double taugd = 324.2205;
     public double taupi = 206.6032;
     public double tauw = 208.7749;
     
     //psyn timeconst
+    public double psi = 0.321430269302047;
     double tauci = 79.8627652635799;
     double taucd = 110.598886780825;
     double taufi=471.475996185132;
     double taufd=304.671929390908;
     
+    
+    //State variables
+    public double signal;
+    public double pi;
+    public double water;
     
     public double poolT;
     public double poolR;
@@ -79,22 +82,19 @@ public final class Sunflecks {
     public double vf;
     public double vc;
     public double ass;
-    public double time_interval;
     public double seq;
 
     
     
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+
+    public static void run(double iniPAR) throws FileNotFoundException, IOException {
         //instantiate the class, initialize it with equilibrium at PAR=100
-        Sunflecks simSunflecks=new Sunflecks(100);       
+        Sunflecks simSunflecks=new Sunflecks(iniPAR);       
         double dt=0.01;        //time step
 
-        CSVReader reader = new CSVReader(new FileReader("sim4488.csv"));
-        CSVWriter writer = new CSVWriter(new FileWriter("output88.csv"), '\t');
+        CSVReader reader = new CSVReader(new FileReader("input.csv"));
+        CSVWriter writer = new CSVWriter(new FileWriter("output.csv"), '\t');
                 
         //read time and PAR from data file and put into two arrays
         List<String[]> allElements = reader.readAll();
