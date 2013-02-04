@@ -13,6 +13,7 @@ import java.util.List;
 import static java.lang.Math.*;
 import javax.swing.*;
 import org.math.plot.*;
+//comment which class from which package
 
 /**
  *
@@ -151,11 +152,12 @@ public final class Sunflecks {
         this.calcSteady(iniIRR);
     }
     
+    //private
     public void calcSteady(double irr){
         this.irr=irr;
         this.vj=getvxeq(this.alphaj,this.thetaj,this.vjmax,0);
         this.vf=getvxeq(this.alphaf,this.thetaf,this.vfmax,this.vfmin);
-        this.vc=getvxeq(this.alphac,this.thetac,this.vcmax,this.vcmin);
+        vc=getvxeq(this.alphac,this.thetac,this.vcmax,this.vcmin);
         updateStdygs();
         double newci=30; //first guess
         int ici=0;
@@ -201,13 +203,13 @@ public final class Sunflecks {
         double vceq=getvxeq(this.alphac,this.thetac,this.vcmax,this.vcmin);
         double wc=getwc(this.ci);
         double[] tau={this.tauci,this.taucd,this.taufi,this.taufd}; //time const
-        //create a object of Differential Equation
+        //create a object of Differential Equation using my class Dfun
         Dfun photoDif=new Dfun(tau,this.rmax, this.tmax, this.kr,
                 this.kt, this.gamma, this.psi,this.vj,vfeq,vceq, this.ci, wc);
         //initial value of state variables
         double[] y0={this.vc, this.vf, this.poolT, this.poolR, this.poolG};
         //calculate those values after one time step
-        double[] yf=rk4(y0,dt,photoDif);
+        double[] yf=rk4(y0,dt,photoDif); //use my rk4 method 
         this.vc=yf[0];
         this.vf=yf[1];
         this.poolT=yf[2];
@@ -215,7 +217,7 @@ public final class Sunflecks {
         this.poolG=yf[4];
         wc=getwc(this.ci);
         this.ass=getass1(wc); 
-        System.out.println(this.ass);
+        //System.out.println(this.ass);
     }
     
     //dynamic function of ci which we want it to be zero
