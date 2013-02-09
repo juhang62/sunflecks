@@ -95,7 +95,7 @@ public final class Sunflecks {
         double dt=0.01;        //time step
 
         CSVReader reader = new CSVReader(new FileReader("input.csv"));
-        CSVWriter writer = new CSVWriter(new FileWriter("output.csv"), '\t');
+        CSVWriter writer = new CSVWriter(new FileWriter("SSoutput.csv"), '\t');
                 
         //read time and PAR from data file and put into two arrays
         List<String[]> allElements = reader.readAll();
@@ -113,12 +113,13 @@ public final class Sunflecks {
         
         double curtime=0;
         for (int i=0;i<nDatapts;i++){
-            while (curtime<timearr[i]){
-                //do the whole simulation every time step
-                curtime+=dt; 
-                simSunflecks.calcDyn(irrarr[i]);             
-            }
+//            while (curtime<timearr[i]){
+//                //do the whole simulation every time step
+//                curtime+=dt; 
+//                simSunflecks.calcDyn(irrarr[i]);             
+//            }
             //get An at each data point and write into output file
+            simSunflecks.calcSteady(irrarr[i]);  
             assarr[i]=simSunflecks.ass;
             String str2 =  String.valueOf(simSunflecks.ass);
             String str1 =  String.valueOf(timearr[i]);
@@ -126,9 +127,8 @@ public final class Sunflecks {
             writer.writeNext(strarr);
         }        
         writer.close();
-        double teststr=simSunflecks.ass;
         System.out.println(curtime);
-        System.out.println(teststr);
+        System.out.println(simSunflecks.ass);
         
         
         // create your PlotPanel (you can use it as a JPanel)
@@ -152,26 +152,34 @@ public final class Sunflecks {
         this.calcSteady(iniIRR);
     }
     
-    //private
+    //private ici does not converge 315, 1242..
     public void calcSteady(double irr){
         this.irr=irr;
         this.vj=getvxeq(this.alphaj,this.thetaj,this.vjmax,0);
         this.vf=getvxeq(this.alphaf,this.thetaf,this.vfmax,this.vfmin);
         vc=getvxeq(this.alphac,this.thetac,this.vcmax,this.vcmin);
         updateStdygs();
-        double newci=30; //first guess
+        double newci=38.9; //first guess
+        this.ci=39;
         int ici=0;
         while(abs(newci-this.ci) > 0.0001 && ici<1000) {
             ici = ici + 1;
             if (ici==999){
                 System.out.println("ici error");
+                System.out.println(irr);
             }
-            //double oldci=this.ci;
-            this.ci= newci;
+//            //double oldci=this.ci;
+//            this.ci= newci;
+//            double fx1=fci(this.ci);
+//            double fx2=fci(this.ci-0.01);
+//            //Netwon's Method: xnew=xold-f(xold)/f'(xold)
+//            newci=this.ci-fx1*(0.01/(fx1-fx2)); 
+            double oldci=this.ci;
+            this.ci=newci;
             double fx1=fci(this.ci);
-            double fx2=fci(this.ci-0.01);
-            //Netwon's Method: xnew=xold-f(xold)/f'(xold)
-            newci=this.ci-fx1*(0.01/(fx1-fx2));        
+            double fx2=fci(oldci);
+            //secent method
+            newci=this.ci-fx1*((this.ci-oldci)/(fx1-fx2));
         }
         double gg = getgg(); 
         this.ass=(this.ca-this.ci)*gg/this.patm;                 
@@ -240,11 +248,11 @@ public final class Sunflecks {
         double T2 = 0;
         double T1 = 0;
         if (eqn2>0){
-            T2=this.poolT;
+            T2=this.tmax;
             //find t1
-            for(int findt1_i=1; findt1_i<500; findt1_i++){
-                double Tportion=T2/findt1_i+1;             
-                for(int findt1_j=1; findt1_j<findt1_i+1; findt1_j++){
+            for(int findt1_i=50; findt1_i<5000; findt1_i+=100){
+                double Tportion=T2/(findt1_i+1);             
+                for(int findt1_j=1; findt1_j<=findt1_i; findt1_j++){
                     T1=T2-Tportion*findt1_j;
                     this.poolT=T1;
                     this.poolR=getR();
@@ -257,11 +265,11 @@ public final class Sunflecks {
                 System.out.println("eqn2 error");
             }              
         }else{ //eqn2<0
-            T1=this.poolT;
+            T1=this.tmax;
             //find t2
-            for(int findt2_i=1; findt2_i<500; findt2_i++){
-                double Tportion=T1/findt2_i+1;             
-                for(int findt2_j=1; findt2_j<findt2_i+1; findt2_j++){
+            for(int findt2_i=50; findt2_i<5000; findt2_i+=100){
+                double Tportion=T1/(findt2_i+1);             
+                for(int findt2_j=1; findt2_j<=findt2_i; findt2_j++){
                     T2=T1-Tportion*findt2_j;
                     this.poolT=T2;
                     this.poolR=getR();
