@@ -3,6 +3,7 @@
  * and open the template in the editor.
  */
 package sunflecks;
+import java.io.File;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.FileNotFoundException;
@@ -89,13 +90,15 @@ public final class Sunflecks {
     
 
 
-    public static void run(double iniPAR) throws FileNotFoundException, IOException {
+    public static void run(double iniPAR,File inputfile,File outputfile, Object[][] paraData) throws FileNotFoundException, IOException {
+        //to do use pass in para        
+        
         //instantiate the class, initialize it with equilibrium at PAR=100
         Sunflecks simSunflecks=new Sunflecks(iniPAR);       
         double dt=0.01;        //time step
-
-        CSVReader reader = new CSVReader(new FileReader("input.csv"));
-        CSVWriter writer = new CSVWriter(new FileWriter("SSoutput.csv"), '\t');
+        
+        CSVReader reader = new CSVReader(new FileReader(inputfile));
+        CSVWriter writer = new CSVWriter(new FileWriter(outputfile), '\t');
                 
         //read time and PAR from data file and put into two arrays
         List<String[]> allElements = reader.readAll();

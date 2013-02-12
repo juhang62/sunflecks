@@ -4,24 +4,65 @@
  */
 package sunflecks;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.filechooser.*;
 import javax.swing.SwingUtilities;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
+import java.io.FileReader;
+import java.util.List;
+
 
 /**
  *
  * @author lfhan
  */
 public class MainFrame extends javax.swing.JFrame {
-
+    
+    JFileChooser fc;
+    File inputfile;
+    File outputfile;
+    String[][] allPara;
+    Object[][] tableData;
     /**
      * Creates new form MainFrame
      */
-    public MainFrame() {
-        initComponents();
+    public MainFrame() throws FileNotFoundException, IOException {
+        CSVReader reader = new CSVReader(new FileReader("para.csv"));
+        List<String[]> paraList = reader.readAll();
+        this.allPara = paraList.toArray(new String[0][]);  
+        initComponents();       
+        fc = new JFileChooser();
+        FileFilter ff=new FileFilter(){
+            public boolean accept(File f) {
+                String fName = f.getName().toUpperCase();
+                if (fName.endsWith(".CSV") || f.isDirectory()) {
+                    return true;
+                } else {
+                    return false;   
+                }
+            }
+            
+            public String getDescription() {
+                return "CSV File (*.csv)";
+            }
+        };            
+        fc.setFileFilter(ff);      
+        inputfile= new File("input.csv");
+        outputfile= new File("output.csv");
+        txtInput.setText(inputfile.getAbsolutePath());
+        txtOutput.setText(outputfile.getAbsolutePath());
+//        tableData = new Object[36][2];
+//        for (int i = 0 ; i < 36 ; i++) {
+//            for (int j = 0 ; j < 2 ; j++) {
+//                tableData[i][j] = paraTable.getValueAt(i,j);
+//            }
+//        }
     }
 
     /**
@@ -36,6 +77,12 @@ public class MainFrame extends javax.swing.JFrame {
         runBtn = new javax.swing.JButton();
         iniPARtxt = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
+        inputBtn = new javax.swing.JButton();
+        txtInput = new javax.swing.JTextField();
+        outputBtn = new javax.swing.JButton();
+        txtOutput = new javax.swing.JTextField();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        paraTable = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -50,31 +97,88 @@ public class MainFrame extends javax.swing.JFrame {
 
         jLabel1.setText("Initial PAR");
 
+        inputBtn.setText("Choose Input");
+        inputBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                inputBtnActionPerformed(evt);
+            }
+        });
+
+        outputBtn.setText("Choose Output");
+        outputBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                outputBtnActionPerformed(evt);
+            }
+        });
+
+        paraTable.setModel(new javax.swing.table.DefaultTableModel(
+            this.allPara,
+            new String [] {
+                "Parameters", "Values"
+            }
+        ){
+            public boolean isCellEditable(int row, int column){
+                if (column == 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        });
+        jScrollPane2.setViewportView(paraTable);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(76, 76, 76)
-                .addComponent(runBtn)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(30, 30, 30)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 89, Short.MAX_VALUE)
-                .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(70, 70, 70))
+                .addGap(33, 33, 33)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(inputBtn)
+                            .addComponent(jLabel1)
+                            .addComponent(outputBtn))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(40, 40, 40)
+                                .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(txtOutput, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
+                                .addComponent(txtInput, javax.swing.GroupLayout.Alignment.LEADING))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(54, 54, 54)
+                        .addComponent(runBtn)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(40, 40, 40))
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {inputBtn, outputBtn});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(31, 31, 31)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addGap(44, 44, 44)
+                    .addComponent(inputBtn)
+                    .addComponent(txtInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(outputBtn)
+                    .addComponent(txtOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(51, 51, 51)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(58, 58, 58)
                 .addComponent(runBtn)
-                .addGap(43, 43, 43))
+                .addContainerGap(175, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(23, 23, 23)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {iniPARtxt, jLabel1});
@@ -83,15 +187,38 @@ public class MainFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
+        tableData = new Object[36][2];
+        for (int i = 0 ; i < 36 ; i++) {
+            for (int j = 0 ; j < 2 ; j++) {
+                tableData[i][j] = paraTable.getValueAt(i,j);
+            }
+        }
         try {   
             double iniPAR = Double.parseDouble(iniPARtxt.getText());
-            Sunflecks.run(iniPAR);
+            Sunflecks.run(iniPAR,inputfile,outputfile,tableData);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_runBtnActionPerformed
+
+    private void inputBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_inputBtnActionPerformed
+
+        int returnVal = fc.showSaveDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            this.inputfile = fc.getSelectedFile();
+            txtInput.setText(inputfile.getAbsolutePath());
+        }
+    }//GEN-LAST:event_inputBtnActionPerformed
+
+    private void outputBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_outputBtnActionPerformed
+        int returnVal = fc.showSaveDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            this.outputfile = fc.getSelectedFile();
+            txtOutput.setText(outputfile.getAbsolutePath());
+        }
+    }//GEN-LAST:event_outputBtnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -123,13 +250,29 @@ public class MainFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainFrame().setVisible(true);
+                try {
+                    new MainFrame().setVisible(true);
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
+    
+    
+    
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField iniPARtxt;
+    private javax.swing.JButton inputBtn;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JButton outputBtn;
+    private javax.swing.JTable paraTable;
     private javax.swing.JButton runBtn;
+    private javax.swing.JTextField txtInput;
+    private javax.swing.JTextField txtOutput;
     // End of variables declaration//GEN-END:variables
 }
