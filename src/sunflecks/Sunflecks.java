@@ -3,15 +3,18 @@
  * and open the template in the editor.
  */
 package sunflecks;
-import java.io.File;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 import static java.lang.Math.*;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.swing.*;
 import org.math.plot.*;
 //comment which class from which package
@@ -62,10 +65,10 @@ public final class Sunflecks {
     
     //psyn timeconst
     public double psi = 0.321430269302047;
-    double tauci = 79.8627652635799;
-    double taucd = 110.598886780825;
-    double taufi=471.475996185132;
-    double taufd=304.671929390908;
+    public double tauci = 79.8627652635799;
+    public double taucd = 110.598886780825;
+    public double taufi=471.475996185132;
+    public double taufd=304.671929390908;
     
     
     //State variables
@@ -90,11 +93,9 @@ public final class Sunflecks {
     
 
 
-    public static void run(double iniPAR,File inputfile,File outputfile, Object[][] paraData) throws FileNotFoundException, IOException {
-        //to do use pass in para        
-        
+    public static void run(double iniPAR,File inputfile,File outputfile, Map paraMap,boolean ifdyn) throws FileNotFoundException, IOException, NoSuchFieldException, IllegalAccessException {       
         //instantiate the class, initialize it with equilibrium at PAR=100
-        Sunflecks simSunflecks=new Sunflecks(iniPAR);       
+        Sunflecks simSunflecks=new Sunflecks(iniPAR,paraMap);       
         double dt=0.01;        //time step
         
         CSVReader reader = new CSVReader(new FileReader(inputfile));
@@ -110,25 +111,30 @@ public final class Sunflecks {
         for (int i=0;i<nDatapts;i++){
             timearr[i]=Double.parseDouble(tmparr[i][0]);
             irrarr[i]=Double.parseDouble(tmparr[i][1]);        
-        }
-               
-        
-        
+        } 
+        String[] header = "time#An#PAR#ci#vc#vf#vj#poolT#poolR#poolG#gs#signal#pi#water#seq".split("#");
+        writer.writeNext(header);
         double curtime=0;
-        for (int i=0;i<nDatapts;i++){
-//            while (curtime<timearr[i]){
-//                //do the whole simulation every time step
-//                curtime+=dt; 
-//                simSunflecks.calcDyn(irrarr[i]);             
-//            }
-            //get An at each data point and write into output file
-            simSunflecks.calcSteady(irrarr[i]);  
-            assarr[i]=simSunflecks.ass;
-            String str2 =  String.valueOf(simSunflecks.ass);
-            String str1 =  String.valueOf(timearr[i]);
-            String[] strarr= {str1,str2};
-            writer.writeNext(strarr);
-        }        
+        if (ifdyn==true){
+            for (int i=0;i<nDatapts;i++){
+                while (curtime<timearr[i]){
+                    //do the whole simulation every time step
+                    curtime+=dt;
+                    simSunflecks.calcDyn(irrarr[i]);
+                }
+                //get An at each data point and write into output file
+                assarr[i]=simSunflecks.ass;
+                String[] OutputArr=simSunflecks.getOutput(timearr[i]);
+                writer.writeNext(OutputArr);
+            } 
+        }else{
+            for (int i=0;i<nDatapts;i++){
+                simSunflecks.calcSteady(irrarr[i]);
+                assarr[i]=simSunflecks.ass;
+                String[] OutputArr=simSunflecks.getOutput(timearr[i]);
+                writer.writeNext(OutputArr);
+            }       
+        }
         writer.close();
         System.out.println(curtime);
         System.out.println(simSunflecks.ass);
@@ -143,16 +149,42 @@ public final class Sunflecks {
         plot.addLinePlot("another plot", timearr, assarr);
         // put the PlotPanel in a JFrame like a JPanel
         JFrame frame = new JFrame("a plot panel");
-        frame.setSize(600, 600);
+        frame.setSize(900, 500);
         frame.setContentPane(plot);
         frame.setVisible(true);
     }
     
     //constructor be called when instantiate the class
-    public Sunflecks(double iniIRR){
-        //Assume the leaf is in equilibrium at the initial PAR 
-        //initialize it by calling steady state model
+    public Sunflecks(double iniIRR, Map paraMap) throws NoSuchFieldException, IllegalAccessException{
+
+        Set<Map.Entry<String, Double>> entries = paraMap.entrySet();
+        for(Map.Entry<String, Double> entry : entries) {
+            String key = entry.getKey();
+            Double value = entry.getValue();
+            Field field = Sunflecks.class.getField(key);
+            field.set(this, value);       
+        }
         this.calcSteady(iniIRR);
+    }
+    
+    private String[] getOutput(Double curtime){
+        String[] strArr= new String[15];
+        strArr[0] =  String.valueOf(curtime);
+        strArr[1]= String.valueOf(this.ass);
+        strArr[2]= String.valueOf(this.irr);
+        strArr[3]= String.valueOf(this.ci);
+        strArr[4]= String.valueOf(this.vc);
+        strArr[5]= String.valueOf(this.vf);
+        strArr[6]= String.valueOf(this.vj);
+        strArr[7]= String.valueOf(this.poolT);
+        strArr[8]= String.valueOf(this.poolR);
+        strArr[9]= String.valueOf(this.poolG);
+        strArr[10]= String.valueOf(this.gs);
+        strArr[11]= String.valueOf(this.signal);
+        strArr[12]= String.valueOf(this.pi);
+        strArr[13]= String.valueOf(this.water);
+        strArr[14]= String.valueOf(this.seq);
+        return strArr;
     }
     
     //private ici does not converge 315, 1242..

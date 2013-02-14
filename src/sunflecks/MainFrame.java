@@ -15,7 +15,10 @@ import javax.swing.SwingUtilities;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.swing.JRadioButton;
 
 
 /**
@@ -74,6 +77,7 @@ public class MainFrame extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        modeBtnGroup = new javax.swing.ButtonGroup();
         runBtn = new javax.swing.JButton();
         iniPARtxt = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
@@ -81,8 +85,10 @@ public class MainFrame extends javax.swing.JFrame {
         txtInput = new javax.swing.JTextField();
         outputBtn = new javax.swing.JButton();
         txtOutput = new javax.swing.JTextField();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        paraScrollPane = new javax.swing.JScrollPane();
         paraTable = new javax.swing.JTable();
+        DynRadioBtn = new javax.swing.JRadioButton();
+        StdyRadioBtn = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -125,7 +131,14 @@ public class MainFrame extends javax.swing.JFrame {
                 }
             }
         });
-        jScrollPane2.setViewportView(paraTable);
+        paraScrollPane.setViewportView(paraTable);
+
+        modeBtnGroup.add(DynRadioBtn);
+        DynRadioBtn.setText("Dynamic Mode");
+        DynRadioBtn.setSelected(true);
+
+        modeBtnGroup.add(StdyRadioBtn);
+        StdyRadioBtn.setText("Steady Mode");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -137,25 +150,32 @@ public class MainFrame extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(inputBtn)
-                            .addComponent(jLabel1)
-                            .addComponent(outputBtn))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(outputBtn)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel1)
+                                .addComponent(runBtn)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(40, 40, 40)
-                                .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(txtOutput, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
-                                .addComponent(txtInput, javax.swing.GroupLayout.Alignment.LEADING))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(txtOutput, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 298, Short.MAX_VALUE)
+                                    .addComponent(txtInput, javax.swing.GroupLayout.Alignment.LEADING)))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(43, 43, 43)
+                                .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(54, 54, 54)
-                        .addComponent(runBtn)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(36, 36, 36)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(DynRadioBtn)
+                            .addComponent(StdyRadioBtn))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 35, Short.MAX_VALUE)
+                .addComponent(paraScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(40, 40, 40))
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {inputBtn, outputBtn});
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {DynRadioBtn, StdyRadioBtn});
 
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -169,15 +189,19 @@ public class MainFrame extends javax.swing.JFrame {
                     .addComponent(outputBtn)
                     .addComponent(txtOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(51, 51, 51)
+                .addComponent(DynRadioBtn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(StdyRadioBtn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(iniPARtxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(58, 58, 58)
+                .addGap(41, 41, 41)
                 .addComponent(runBtn)
-                .addContainerGap(175, Short.MAX_VALUE))
+                .addGap(88, 88, 88))
             .addGroup(layout.createSequentialGroup()
                 .addGap(23, 23, 23)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(paraScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 412, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -188,14 +212,18 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void runBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runBtnActionPerformed
         tableData = new Object[36][2];
+        Map<String, Double> paraMap = new HashMap<>();
+        boolean ifdyn=DynRadioBtn.isSelected();
         for (int i = 0 ; i < 36 ; i++) {
-            for (int j = 0 ; j < 2 ; j++) {
-                tableData[i][j] = paraTable.getValueAt(i,j);
-            }
+            String key = (String) paraTable.getValueAt(i,0);
+            Double value= Double.parseDouble((String) paraTable.getValueAt(i,1));
+            paraMap.put(key,value);
         }
         try {   
             double iniPAR = Double.parseDouble(iniPARtxt.getText());
-            Sunflecks.run(iniPAR,inputfile,outputfile,tableData);
+            Sunflecks.run(iniPAR,inputfile,outputfile,paraMap,ifdyn);
+        } catch (NoSuchFieldException | IllegalAccessException ex) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -265,11 +293,14 @@ public class MainFrame extends javax.swing.JFrame {
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JRadioButton DynRadioBtn;
+    private javax.swing.JRadioButton StdyRadioBtn;
     private javax.swing.JTextField iniPARtxt;
     private javax.swing.JButton inputBtn;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.ButtonGroup modeBtnGroup;
     private javax.swing.JButton outputBtn;
+    private javax.swing.JScrollPane paraScrollPane;
     private javax.swing.JTable paraTable;
     private javax.swing.JButton runBtn;
     private javax.swing.JTextField txtInput;
