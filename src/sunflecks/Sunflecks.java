@@ -77,33 +77,39 @@ public final class Sunflecks {
     public double ass;
     public double seq;
 
-//    public static void main(String[] args) { 
-//        double[][] timeirr={
-//            {1,500},
-//            {2,50},
-//            {5,500},
-//            {10,500}
-//        };
-//        double[][] timeass=rawrun(timeirr);
-//        System.out.println(timeass[1][1]);   
-//    }
-    
-    public static double[][] rawrun(double[][] timeirr){
-        double dt=0.01;
-        int nDatapts= timeirr.length;
-        double[][] timeass=timeirr;
-        double curtime=0;
-        Sunflecks simSunflecks=new Sunflecks(timeirr[0][1]); 
-        for (int i=0;i<nDatapts;i++){
-            while (curtime<timeirr[i][0]){
-                //do the whole simulation every time step
-                curtime+=dt;
-                simSunflecks.calcDyn(timeirr[i][1]);
-            }
-            //get An at each data point and write into output file
-            timeass[i][1]=simSunflecks.ass;
+ 
+
+    public static void main(String[] args) { 
+        Sunflecks obj=new Sunflecks(100);
+        double[] time=new double[3600];
+        double[] irr=new double[3600];
+        for (int i=0;i<1800;i++){
+            time[i]=i;
+            irr[i]=500;
         }
-        return timeass;
+        for (int i=1800;i<3600;i++){
+            time[i]=i;
+            irr[i]=100;
+        }
+        double[] ass=obj.rawrun(time,irr);
+        System.out.println(ass[1]);  
+    }
+    
+    public double[] rawrun(double[] time, double[] irr){
+        //double dt=0.01;
+        int nDatapts= time.length;
+        double timeintv;
+        double irrin;
+        double[] assco2=new double[nDatapts];
+        //Sunflecks simSunflecks=new Sunflecks(timeirr[0][1]); 
+        for (int i=1;i<nDatapts;i++){
+            timeintv=time[i]-time[i-1];
+            irrin=(irr[i]+irr[i-1])/2;
+            this.calcDyn(irrin,timeintv);
+            //get An at each data point and write into output file
+            assco2[i]=this.ass;
+        }
+        return assco2;
     }
 
     
@@ -165,9 +171,9 @@ public final class Sunflecks {
         this.ass=(this.ca-this.ci)*gg/this.patm;                 
     }
     
-    public void calcDyn(double irr){
+    public void calcDyn(double irr, double timeinv){
         this.irr=irr;
-        double dt=0.01;
+        double dt=timeinv;
         updateDyngs(dt);
         double gg=getgg();
         this.ci = this.ca - ((this.ass * this.patm) / gg);
@@ -197,7 +203,7 @@ public final class Sunflecks {
         //initial value of state variables
         double[] y0={this.vc, this.vf, this.poolT, this.poolR, this.poolG};
         //calculate those values after one time step
-        double[] yf=rk4(y0,dt,photoDif); //use my rk4 method 
+        double[] yf=rkf45(y0,photoDif,dt); //use my rkf45 method 
         this.vc=yf[0];
         this.vf=yf[1];
         this.poolT=yf[2];
@@ -326,7 +332,112 @@ public final class Sunflecks {
         return yf;
     }
     
-    public double[] scaleArray(double[] arr, double scaleFactor){
+    public double[] rkf45(double[] y0,Dfun dfun,double tspan){
+        double dt=0.01;
+        double dtmax=0.5;
+        double dtmin=0.001;
+        double t=0;
+        double reltol=1e-4;
+        double abstol=1e-4;
+        int nvar=y0.length;        
+        double[][] rkfinmd = new double[5][5];
+        rkfinmd[0][0]=1.0/4;
+        rkfinmd[1][0]=3.0/32;
+        rkfinmd[1][1]=9.0/32;
+        rkfinmd[2][0]=1932.0/2197;
+        rkfinmd[2][1]=-7200.0/2197;
+        rkfinmd[2][3]=7296.0/2197;
+        rkfinmd[3][0]=439.0/216;
+        rkfinmd[3][1]=-8;
+        rkfinmd[3][2]=3680.0/513;
+        rkfinmd[3][3]=-845.0/4104;
+        rkfinmd[4][0]=-8.0/27;
+        rkfinmd[4][1]=2;
+        rkfinmd[4][2]=-3544.0/2565;
+        rkfinmd[4][3]=1859.0/4104;
+        rkfinmd[4][4]=-11.0/40;
+        
+        double[][] rkffi=new double[2][6];
+        rkffi[0][0]=25.0/216;
+        rkffi[0][1]=0;
+        rkffi[0][2]=1408.0/2565;
+        rkffi[0][3]=2197.0/4104;
+        rkffi[0][4]=-1.0/5;
+        rkffi[0][5]=0;
+        rkffi[1][0]=16.0/135;
+        rkffi[1][1]=0;
+        rkffi[1][2]=6656.0/12825;
+        rkffi[1][3]=28561.0/56430;
+        rkffi[1][4]=-9.0/50;
+        rkffi[1][5]=2.0/55;
+    
+        while (t < tspan) {
+            if (t + dt > tspan){
+                dt=tspan-t;
+            } 
+            double[][] k = new double[6][nvar];
+            double[] y = y0;
+            for (int i = 0; i < 6; i++) {
+                k[i] = dfun.getdf(y);
+                k[i]= scaleArray(k[i],dt);
+                y = y0;
+                if (i == 5) {
+                    break;
+                }
+                for (int j = 0; j <= i; j++) {
+                    y = addArray(y, scaleArray(k[j], rkfinmd[i][j]));
+                }
+            }
+
+            double[] yf4 = y0;
+            double[] yf5 = y0;
+            for (int i = 0; i < 6; i++) {
+                yf4 = addArray(yf4, scaleArray(k[i], rkffi[0][i]));
+                yf5 = addArray(yf5, scaleArray(k[i], rkffi[1][i]));
+            }
+            double err = normmax(addArray(yf4,scaleArray(yf5,-1)));
+            double ratio=err/(reltol*minabs(yf4)+abstol);
+            if (ratio<1) {
+                t = t + dt;
+                y0 = yf4;
+                dt=0.9*dt*pow(ratio,-0.2);
+            }else{
+                dt=0.9*dt*pow(ratio,-0.25);
+            }
+            
+            if (dtmax < dt) {
+                dt = dtmax;
+            }
+            if (dtmin > dt) {
+                System.out.println("stiff");
+            }
+        }
+        
+        return y0;
+    }
+    
+    public static double normmax(double[] vec){
+        double max=0;
+        for( int i = 0; i < vec.length; i++ ){
+            if(abs(vec[i])>max){
+                max=vec[i];
+            }
+        }
+        return max;    
+    }
+    
+    public static double minabs(double[] vec){
+        double min=10000;
+        for( int i = 0; i < vec.length; i++ ){
+            if(abs(vec[i])<min){
+                min=vec[i];
+            }
+        }
+        return min;    
+    }
+    
+    
+    public static double[] scaleArray(double[] arr, double scaleFactor){
         double[] result;
         result=new double[arr.length];
         for (int i=0; i<arr.length; i++) {
@@ -335,11 +446,24 @@ public final class Sunflecks {
         return result;
     } 
     
-    public double[] addArray(double[] arr1, double[] arr2){
+    
+    
+    
+    public static double[] addArray(double[] arr1, double[] arr2){
+        double[] out=new double[5];
         for (int i=0; i<arr1.length; i++) {
-            arr1[i] = arr1[i] + arr2[i];
+            out[i] = arr1[i] + arr2[i];
         }
-        return arr1;
+        return out;
+    }
+    
+    public static double[] addMultiArray(double[] ... arr){
+        int narr=arr.length;
+        double[] sum=arr[1];
+        for (int i=1; i<narr; i++) {
+            sum = addArray(sum, arr[i]);
+        }
+        return sum;
     }
     
     //get equilibrium signal 
