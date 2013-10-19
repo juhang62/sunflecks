@@ -25,24 +25,24 @@ public final class Sunflecks {
     public double taupi = 1.8467e+02;
     public double tauw = 1.8519e+02;
     /**/
-    public double rd = 2; //miumol
-    public double vjmax = 50.0; //miumol  = 2 * this.vcmax;
-    public double vcmax = 40.0; //miumol
-    public double vfmax = 50.0; //this.vfmax = 1.8 * this.vcmax;
+    public double rd = 1.7; //miumol
+    public double vjmax = 30.0; //miumol  = 2 * this.vcmax;
+    public double vcmax = 98.0; //miumol
+    public double vfmax = 2.4*98; //this.vfmax = 1.8 * this.vcmax;
     public double vfmin = 0.1;
-    public double vcmin = 3;
+    public double vcmin = 0.01;
     /**/
-    public double alphac = 0.03; //est.
-    public double thetac = 0.7;
-    public double alphaf = 0.01;
-    public double thetaf = 0.9;
-    public double alphaj = 0.001;
-    public double thetaj = 0.03;
+    public double alphac = 6.0088e-03; //est.
+    public double thetac = 3.5740e-01;
+    public double alphaf = 6.0088e-03;
+    public double thetaf = 3.5740e-01;
+    public double alphaj = 6.0088e-03;
+    public double thetaj = 3.5740e-01;
     /**/
-    public double rmax = 20; //miu mol, also used in dy function
-    public double tmax = 20; //miu mol, also used in dy function
-    public double kr = 5; //need est. miu mol, also used in dy function
-    public double kt = 5;  //need est. miu mol, also used in dy function 
+    public double rmax = 196; //miu mol, also used in dy function
+    public double tmax = 196; //miu mol, also used in dy function
+    public double kr = 2; //need est. miu mol, also used in dy function
+    public double kt = 2;  //need est. miu mol, also used in dy function 
     public double gamma = 4.44;//also used in dy function
     public double ka = 1;
     public double kc = 31;
@@ -51,11 +51,11 @@ public final class Sunflecks {
     public double ca = 39;//changed
     public double po2 = 21000;
     //psyn timeconst
-    public double psi = 0.01;
-    public double tauci = 79.8627652635799;
-    public double taucd = 110.598886780825;
-    public double taufi = 47.475996185132;
-    public double taufd = 30.671929390908;
+    public double psi = 0.04;
+    public double tauci = 50;
+    public double taucd = 120;
+    public double taufi = 30;
+    public double taufd = 50;
     //State variables
     public double signal;
     public double pi;
@@ -78,21 +78,21 @@ public final class Sunflecks {
     private boolean ifloop = false;
 
     public static void main(String[] args) {
-        Sunflecks obj = new Sunflecks(500);
+        Sunflecks obj = new Sunflecks(50);
         double[] time = new double[3600];
         double[] irrin = new double[3600];
         double[] gsco2 = new double[3600];
         double[] ambco2 = new double[3600];
         for (int i = 0; i < 2; i++) {
             time[i] = i + 1;
-            irrin[i] = 500;
+            irrin[i] = 50;
 //            gsco2[i] = 0.03;
 //            ambco2[i] = 39;
 
         }
         for (int i = 2; i < 3600; i++) {
             time[i] = i + 1;
-            irrin[i] = 50;
+            irrin[i] = 1300;
 //            gsco2[i] = 0.03;
 //            ambco2[i] = 39;
         }
@@ -100,7 +100,10 @@ public final class Sunflecks {
 //        double[] irr={100,200,300,400,500};
         //double[] ass = obj.caliDynA(time, irr, gsco2, ambco2);
         double[][] result = obj.rawrun(time, irrin);
-        System.out.println(result[4][1000]);
+        System.out.println(result[0][1]);
+        for (int i = 0; i < 5; i++) {
+        System.out.println(result[0][i]);
+        }    
     }
 
     public double[][] rawrun(double[] time, double[] irr) {
@@ -215,15 +218,14 @@ public final class Sunflecks {
     public void calcDyn(double irr, double timeinv) {
         this.irr = irr;
         this.curtime = 0.0;
-        this.laststep = false;
+        //this.laststep = false;
         while (this.curtime < timeinv) {
             if (this.curtime + dt > timeinv) {
                 this.dt = timeinv - this.curtime;
-                this.laststep = true;
-            } else {
-                this.laststep = false;
+//                this.laststep = true;
+//            } else {
+//                this.laststep = false;
             }
-            
             //update biochem first in order fix gs bug?
             this.vj = getvxeq(this.alphaj, this.thetaj, this.vjmax, 0);
             double vfeq = getvxeq(this.alphaf, this.thetaf, this.vfmax, this.vfmin);
@@ -643,10 +645,10 @@ public final class Sunflecks {
 
     //get equilibrium signal 
     public double getSeq() {
-        double smin = this.gsmin / this.gsmax;
-        double seqval = ((1 + smin + this.alphag * this.irr)
-                - sqrt(pow(1 + smin + this.alphag * this.irr, 2)
-                - 4 * this.thetag * (smin + this.alphag * this.irr))) / (2.0 * this.thetag);
+        //double smin = this.gsmin / this.gsmax;
+        double seqval = ((1 + this.gsmin + this.alphag * this.irr)
+                - sqrt(pow(1 + this.gsmin + this.alphag * this.irr, 2)
+                - 4 * this.thetag * (this.gsmin + this.alphag * this.irr))) / (2.0 * this.thetag);
         return seqval;
     }
 
@@ -677,7 +679,8 @@ public final class Sunflecks {
     }
 
     private double getgg() {
-        double gg = (this.gs * 1000000 * this.gb) / (this.gs * 1000000 + this.gb);
+        //convert units
+        double gg = (this.gs * 1000000 * this.gb) / (this.gs * 1000000 + this.gb); 
         return gg;
     }
 
