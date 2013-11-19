@@ -136,6 +136,7 @@ public final class Sunflecks {
         return out;
     }
 
+    //
     public double[] caliDynA(double[] time, double[] irr, double[] gsco2, double[] ambco2) {
         int nDatapts = time.length;
         double timeintv;
@@ -156,6 +157,7 @@ public final class Sunflecks {
     }
 
     //constructor be called when instantiate the class
+    //will will initiate an object at the given PAR
     public Sunflecks(double iniIRR) {
         this.calcSteady(iniIRR);
     }
@@ -180,7 +182,8 @@ public final class Sunflecks {
         return strArr;
     }
 
-    //private ici does not converge 315, 1242..
+    //Calculate steady state photosynthesis at the given PAR; 
+    //will update all the state variables. 
     public void calcSteady(double irr) {
         this.irr = irr;
         this.vj = getvxeq(this.alphaj, this.thetaj, this.vjmax, 0);
@@ -215,6 +218,8 @@ public final class Sunflecks {
         this.ass = (this.ca - this.ci) * gg / this.patm;
     }
 
+    //caluclate dynamic photosynthesis in the next given time interval;
+    //and update state variables
     public void calcDyn(double irr, double timeinv) {
         this.irr = irr;
         this.curtime = 0.0;
@@ -368,7 +373,7 @@ public final class Sunflecks {
         return ass1 - ass2;
     }
 
-    //method to update state varibles of steady state stomata
+    //method to update state variables of steady state stomata
     public void updateStdygs() {
         this.seq = getSeq();
         this.gs = this.seq * this.gsmax;
@@ -509,6 +514,7 @@ public final class Sunflecks {
         return y0;
     }
 
+    //Apatite time-step solver for systems of ODEs using Runge–Kutta–Fehlberg method
     public double[] rkf45beta(double[] y0, Dfun dfun) {
         double reltol = 1e-3;
         double abstol = 1e-3;
@@ -594,7 +600,8 @@ public final class Sunflecks {
         }
         return y0;
     }
-
+    
+    //Return the maximum norm of the given vector
     public static double normmax(double[] vec) {
         double max = 0;
         for (int i = 0; i < vec.length; i++) {
@@ -605,6 +612,7 @@ public final class Sunflecks {
         return max;
     }
 
+    //Return the minimum absolute value of a given vector
     public static double minabs(double[] vec) {
         double min = 10000;
         for (int i = 0; i < vec.length; i++) {
@@ -615,6 +623,7 @@ public final class Sunflecks {
         return min;
     }
 
+    //Return a scaled array of the given array with the given factor
     public static double[] scaleArray(double[] arr, double scaleFactor) {
         double[] result;
         result = new double[arr.length];
@@ -624,6 +633,7 @@ public final class Sunflecks {
         return result;
     }
 
+    //add two arrays
     public static double[] addArray(double[] arr1, double[] arr2) {
         int nelem = arr1.length;
         double[] result = new double[nelem];
@@ -633,6 +643,7 @@ public final class Sunflecks {
         return result;
     }
 
+    //Return the sum of more than two given arrays
     public static double[] addMultiArray(double[]... arr) {
         int narr = arr.length;
         int nelem = arr[0].length;
@@ -662,6 +673,7 @@ public final class Sunflecks {
         return vxeq;
     }
 
+    //Return current the pool R
     private double getR() {
         double shit1 = (this.vj * (1 - this.poolT / this.tmax))
                 * ((this.kt + this.poolT) / (this.vf * this.poolT));
@@ -670,6 +682,8 @@ public final class Sunflecks {
         return pooR;
     }
 
+    //Return the change rate of pool R, 
+    // approaches zeros through bisection iterations.
     private double geteqn2(double localci, double wc) {
         double eqn2 = (((this.vf * this.poolT) / (this.kt + this.poolT))
                 * (1 - this.poolR / this.rmax))
@@ -678,18 +692,21 @@ public final class Sunflecks {
         return eqn2;
     }
 
+    //Return total stomatal conductance to CO2
     private double getgg() {
         //convert units
         double gg = (this.gs * 1000000 * this.gb) / (this.gs * 1000000 + this.gb); 
         return gg;
     }
 
+    //return RuBP saturated carboxylation rate
     private double getwc(double localci) {
         double wc = (this.vc * pow(localci, 2.0)) / ((localci + this.ka)
                 * (localci + this.kc * (1 + this.po2 / this.ko)));
         return wc;
     }
 
+    //
     private double getass1(double wc) {
         double ass1 = wc * (this.poolR / (this.poolR + this.kr))
                 - 0.5 * this.psi * this.poolG - this.rd;

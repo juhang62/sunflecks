@@ -24,6 +24,7 @@ public class Dfun {
     double wc;
     boolean isgs;
     
+    //constructor for stomata use
     public Dfun(double taugi, double taugd, double taupi, double tauw, double seq){
         this.tau=new double[4];
         this.tau[0]=taugi;
@@ -34,6 +35,7 @@ public class Dfun {
         this.isgs=true;
     }
     
+    //constructor for photosynthesis use
     public Dfun(double[] tau, double rmax, double tmax, double kr,
             double kt, double gamma, double psi, double vj, double vfeq, 
             double vceq, double ci, double wc){
